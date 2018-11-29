@@ -192,7 +192,6 @@ if [[ "$loaderMode" == "0" ]]; then
   [ -z "$GRUBDIR" -o -z "$GRUBFILE" ] && echo -ne "Error! \nNot Found grub path.\n" && exit 1;
 else
   tmpINS='auto'
-  ddMode='0'
 fi
  
 if [[ "$isMirror" == '1' ]]; then
@@ -845,5 +844,7 @@ else
   mkdir -p "$HOME/loader"
   cp -rf "/boot/initrd.img" "$HOME/loader/initrd.img"
   cp -rf "/boot/vmlinuz" "$HOME/loader/vmlinuz"
+  [[ -f "/boot/initrd.img" ]] && rm -rf "/boot/initrd.img"
+  [[ -f "/boot/vmlinuz" ]] && rm -rf "/boot/vmlinuz"
   echo && ls -AR1 "$HOME/loader"
 fi
