@@ -326,7 +326,7 @@ if [[ "$SpikCheckDIST" == '0' ]]; then
 fi
 
 [[ "$ddMode" == '1' ]] && {
-  export SSL_SUPPORT='https://moeclub.org/get/wget_udeb_amd64';
+  export SSL_SUPPORT='https://github.com/MoeClub/MoeClub.github.io/raw/master/lib/wget_udeb_amd64.tar.gz';
   if [[ -n "$tmpURL" ]]; then
     DDURL="$tmpURL"
     echo "$DDURL" |grep -q '^http://\|^ftp://\|^https://';
@@ -371,7 +371,7 @@ ASKVNC(){
 }
 
 [ "$inVNC" == 'y' -o "$inVNC" == 'n' ] || ASKVNC;
-[[ "$ddMode" == '0' ]] && { 
+[[ "$ddMode" == '0' ]] && {
   [[ "$inVNC" == 'y' ]] && echo -e "\033[34mManual Mode\033[0m insatll [\033[33m$Relese\033[0m] [\033[33m$DIST\033[0m] [\033[33m$VER\033[0m] in VNC. "
   [[ "$inVNC" == 'n' ]] && echo -e "\033[34mAuto Mode\033[0m insatll [\033[33m$Relese\033[0m] [\033[33m$DIST\033[0m] [\033[33m$VER\033[0m]. "
 }
@@ -477,7 +477,7 @@ echo ${arrayNum[@]} |sed 's/\s/\n/g' |sort -n -k 1 -t ',' |tail -n1 |cut -d',' -
     ICFGN="$(find /etc/network/interfaces.d -name '*.cfg' |wc -l)" || ICFGN='0';
     [[ "$ICFGN" -ne '0' ]] && {
       for NetCFG in `ls -1 /etc/network/interfaces.d/*.cfg`
-        do 
+        do
           [[ -z "$(cat $NetCFG | sed -n '/iface.*inet static/p')" ]] && AutoNet='1' || AutoNet='0';
           [[ "$AutoNet" -eq '0' ]] && break;
         done
@@ -489,7 +489,7 @@ echo ${arrayNum[@]} |sed 's/\s/\n/g' |sort -n -k 1 -t ',' |tail -n1 |cut -d',' -
   ICFGN="$(find /etc/sysconfig/network-scripts -name 'ifcfg-*' |grep -v 'lo'|wc -l)" || ICFGN='0';
   [[ "$ICFGN" -ne '0' ]] && {
     for NetCFG in `ls -1 /etc/sysconfig/network-scripts/ifcfg-* |grep -v 'lo$' |grep -v ':[0-9]\{1,\}'`
-      do 
+      do
         [[ -n "$(cat $NetCFG | sed -n '/BOOTPROTO.*[dD][hH][cC][pP]/p')" ]] && AutoNet='1' || {
           AutoNet='0' && . $NetCFG;
           [[ -n $NETMASK ]] && MASK="$NETMASK";
@@ -710,7 +710,7 @@ d-i grub-installer/bootdev string default
 d-i grub-installer/force-efi-extra-removable boolean true
 d-i finish-install/reboot_in_progress note
 d-i debian-installer/exit/reboot boolean true
-d-i preseed/late_command string	\
+d-i preseed/late_command string \
 sed -ri 's/^#?PermitRootLogin.*/PermitRootLogin yes/g' /target/etc/ssh/sshd_config; \
 sed -ri 's/^#?PasswordAuthentication.*/PasswordAuthentication yes/g' /target/etc/ssh/sshd_config;
 EOF
@@ -805,7 +805,7 @@ timezone --isUtc Asia/Hong_Kong
 #NODHCP network --bootproto=static --ip=$IPv4 --netmask=$MASK --gateway=$GATE --nameserver=8.8.8.8 --onboot=on
 bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
 zerombr
-clearpart --all --initlabel 
+clearpart --all --initlabel
 autopart
 
 %packages
