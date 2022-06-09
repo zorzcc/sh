@@ -37,6 +37,7 @@ export GRUBFILE=''
 export GRUBVER=''
 export VER=''
 export setCMD=''
+export setConsole=''
 
 while [[ $# -ge 1 ]]; do
   case $1 in
@@ -122,6 +123,11 @@ while [[ $# -ge 1 ]]; do
     -cmd)
       shift
       setCMD="$1"
+      shift
+      ;;
+    -console)
+      shift
+      setConsole="$1"
       shift
       ;;
     -firmware)
@@ -351,6 +357,7 @@ if [[ -n "$tmpDIST" ]]; then
         [[ "$isDigital" == '9' ]] && DIST='stretch';
         [[ "$isDigital" == '10' ]] && DIST='buster';
         [[ "$isDigital" == '11' ]] && DIST='bullseye';
+        # [[ "$isDigital" == '12' ]] && DIST='bookworm';
       }
     }
     LinuxMirror=$(selectMirror "$Relese" "$DIST" "$VER" "$tmpMirror")
@@ -367,6 +374,7 @@ if [[ -n "$tmpDIST" ]]; then
         [[ "$isDigital" == '16.04' ]] && DIST='xenial';
         [[ "$isDigital" == '18.04' ]] && DIST='bionic';
         [[ "$isDigital" == '20.04' ]] && DIST='focal';
+        [[ "$isDigital" == '22.04' ]] && DIST='jammy';
       }
     }
     LinuxMirror=$(selectMirror "$Relese" "$DIST" "$VER" "$tmpMirror")
@@ -547,10 +555,12 @@ if [[ "$loaderMode" == "0" ]]; then
   lowMem || Add_OPTION="$Add_OPTION lowmem=+0"
 
   if [[ "$linux_relese" == 'debian' ]] || [[ "$linux_relese" == 'ubuntu' ]]; then
-    BOOT_OPTION="auto=true $Add_OPTION hostname=$linux_relese domain= -- quiet"
+    BOOT_OPTION="auto=true $Add_OPTION hostname=$linux_relese domain=$linux_relese quiet"
   elif [[ "$linux_relese" == 'centos' ]]; then
     BOOT_OPTION="ks=file://ks.cfg $Add_OPTION ksdevice=$interfaceSelect"
   fi
+  
+  [ -n "$setConsole" ] && BOOT_OPTION="$BOOT_OPTION --- console=$setConsole"
 
   [[ "$Type" == 'InBoot' ]] && {
     sed -i "/$LinuxKernel.*\//c\\\t$LinuxKernel\\t\/boot\/vmlinuz $BOOT_OPTION" /tmp/grub.new;
@@ -604,8 +614,11 @@ if [[ "$linux_relese" == 'debian' ]] || [[ "$linux_relese" == 'ubuntu' ]]; then
 cat >/tmp/boot/preseed.cfg<<EOF
 d-i debian-installer/locale string en_US
 d-i console-setup/layoutcode string us
+
 d-i keyboard-configuration/xkb-keymap string us
+
 d-i netcfg/choose_interface select $interfaceSelect
+
 d-i netcfg/disable_autoconfig boolean true
 d-i netcfg/dhcp_failed note
 d-i netcfg/dhcp_options select Configure network manually
@@ -615,19 +628,24 @@ d-i netcfg/get_gateway string $GATE
 d-i netcfg/get_nameservers string $ipDNS
 d-i netcfg/no_default_route boolean true
 d-i netcfg/confirm_static boolean true
+
 d-i hw-detect/load_firmware boolean true
+
 d-i mirror/country string manual
 d-i mirror/http/hostname string $MirrorHost
 d-i mirror/http/directory string $MirrorFolder
 d-i mirror/http/proxy string
+
 d-i passwd/root-login boolean ture
 d-i passwd/make-user boolean false
 d-i passwd/root-password-crypted password $myPASSWORD
 d-i user-setup/allow-password-weak boolean true
 d-i user-setup/encrypt-home boolean false
+
 d-i clock-setup/utc boolean true
 d-i time/zone string US/Eastern
 d-i clock-setup/ntp boolean false
+
 d-i preseed/early_command string anna-install libfuse2-udeb fuse-udeb ntfs-3g-udeb libcrypto1.1-udeb libpcre2-8-0-udeb libssl1.1-udeb libuuid1-udeb zlib1g-udeb wget-udeb
 d-i partman/early_command string [[ -n "\$(blkid -t TYPE='vfat' -o device)" ]] && umount "\$(blkid -t TYPE='vfat' -o device)"; \
 debconf-set partman-auto/disk "\$(list-devices disk |head -n1)"; \
@@ -638,6 +656,7 @@ cd Start* || cd start*; \
 cp -f '/net.bat' './net.bat'; \
 /sbin/reboot; \
 umount /media || true; \
+
 d-i partman-partitioning/confirm_write_new_label boolean true
 d-i partman/mount_style select uuid
 d-i partman/choose_partition select finish
@@ -650,12 +669,16 @@ d-i partman-lvm/confirm boolean true
 d-i partman-lvm/confirm_nooverwrite boolean true
 d-i partman/confirm boolean true
 d-i partman/confirm_nooverwrite boolean true
+
 d-i debian-installer/allow_unauthenticated boolean true
+
 tasksel tasksel/first multiselect minimal
 d-i pkgsel/update-policy select none
 d-i pkgsel/include string openssh-server
 d-i pkgsel/upgrade select none
+
 popularity-contest popularity-contest/participate boolean false
+
 d-i grub-installer/only_debian boolean true
 d-i grub-installer/bootdev string $IncDisk
 d-i grub-installer/force-efi-extra-removable boolean true
@@ -734,13 +757,16 @@ bootloader --location=mbr --append="rhgb quiet crashkernel=auto"
 zerombr
 clearpart --all --initlabel 
 autopart
+
 %packages
 @base
 %end
+
 %post --interpreter=/bin/bash
 rm -rf /root/anaconda-ks.cfg
 rm -rf /root/install.*log
 %end
+
 EOF
 
 
